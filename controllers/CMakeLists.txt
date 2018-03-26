@@ -1,0 +1,4 @@
+include_directories(${CMAKE_SOURCE_DIR}/controllers)
+
+add_subdirectory(khaperaiv_shape_detection)
+add_subdirectory(khaperaiv_diffusion)

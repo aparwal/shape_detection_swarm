@@ -1,0 +1,5 @@
+add_library(kheperaiv_shape_detection MODULE kheperaiv_shape_detection.h kheperaiv_shape_detection.cpp)
+target_link_libraries(kheperaiv_shape_detection
+  argos3core_simulator
+  argos3plugin_simulator_kheperaiv
+  argos3plugin_simulator_genericrobot)
