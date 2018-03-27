@@ -322,7 +322,7 @@ CVector2 FootBotShapeDetection::CagingVector() {
     const CCI_ColoredBlobOmnidirectionalCameraSensor::SReadings& sReadings = m_pcCamera->GetReadings();
     /* Go through the camera readings to calculate the caging interaction vector */
     if(! sReadings.BlobList.empty()) {
-        CVector2 cAccum,current,nearest= CVector2(1000,0);;
+        CVector2 cAccum,current,nearest= CVector2(1000,0);
         Real fLJ;
         size_t unBlobsSeen = 0;
 
@@ -365,42 +365,36 @@ CVector2 FootBotShapeDetection::CagingVector() {
                     nearest = current;
                 }
 
-                /*Change state variable*/            
+                /*set visibility flag*/            
                 m_sStateData.ObjectVisibility = true;
             }
         }
-
-        if( (unBlobsSeen > 0) || (m_sStateData.ObjectVisibility)){
-            /* final LJ for robots*/
-            if(unBlobsSeen > 0) {
-                /* Divide the accumulator by the number of blobs seen */
-                cAccum /= unBlobsSeen;
-                /* Clamp the length of the vector to the max speed */
-                if(cAccum.Length() > m_sWheelTurningParams.MaxSpeed) {
-                    cAccum.Normalize();
-                    cAccum *= m_sWheelTurningParams.MaxSpeed;
-                }
+        /* final LJ for robot*/
+        if (m_sStateData.ObjectVisibility){
+            /* Calculate LJ */
+            fLJ = m_sCagingParams.GeneralizedLennardJones(nearest.Length(),
+                m_sCagingParams.TargetObjectDistance,m_sCagingParams.ObjectGain);
+            /* Sum to accumulator */
+            cAccum += CVector2(fLJ, nearest.Angle());
+            /* Divide the accumulator by the number of blobs seen */
+            cAccum /= (unBlobsSeen+1);
+            // LOGERR<<unBlobsSeen<< std::endl;
+            /* Clamp the length of the vector to the max speed */
+            if(cAccum.Length() > m_sWheelTurningParams.MaxSpeed) {
+                cAccum.Normalize();
+                cAccum *= m_sWheelTurningParams.MaxSpeed;
             }
 
-            /* final LJ for object*/
-            if (m_sStateData.ObjectVisibility){
-                /* Calculate LJ */
-                fLJ = m_sCagingParams.GeneralizedLennardJones(nearest.Length(),
-                    m_sCagingParams.TargetObjectDistance,m_sCagingParams.ObjectGain);
-                /* Sum to accumulator */
-                cAccum += CVector2(fLJ, nearest.Angle());
-                /* Set reached flag*/
-                if(nearest.Length() < m_sStateData.ReachDistance)
-                    m_sStateData.ObjectReached = true;
-                else
-                    m_sStateData.ObjectReached = false;
-            }
-
+            /* Set reached flag*/
+            if(nearest.Length() < m_sStateData.ReachDistance)
+                m_sStateData.ObjectReached = true;
+            else
+                m_sStateData.ObjectReached = false;
+        
             return cAccum;
         }
         else
             return CVector2();
-
     }
     else
          return CVector2();
