@@ -1,4 +1,5 @@
 include_directories(${CMAKE_SOURCE_DIR}/controllers)
 
-add_subdirectory(khaperaiv_shape_detection)
-add_subdirectory(khaperaiv_diffusion)
+add_subdirectory(kheperaiv_shape_detection)
+add_subdirectory(kheperaiv_diffusion)
+add_subdirectory(footbot_shape_detection)

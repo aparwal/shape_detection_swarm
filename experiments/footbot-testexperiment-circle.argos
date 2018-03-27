@@ -1,0 +1,220 @@
+<?xml version="1.0" ?>
+<argos-configuration>
+
+  <!-- ************************* -->
+  <!-- * General configuration * -->
+  <!-- ************************* -->
+  <framework>
+    <system threads="0" />
+    <experiment length="600"
+                ticks_per_second="10"
+                random_seed="7" />
+  </framework>
+
+  <!-- *************** -->
+  <!-- * Controllers * -->
+  <!-- *************** -->
+  <controllers>
+
+    <footbot_shape_detection_controller id="fsdc"
+                               library="build/controllers/footbot_shape_detection/libfootbot_shape_detection">
+      <actuators>
+        <differential_steering implementation="default" />
+        <leds implementation="default" medium="leds" />
+        <range_and_bearing implementation="default" />
+      </actuators>
+      <sensors>
+        <footbot_proximity implementation="default" show_rays="true" />
+        <colored_blob_omnidirectional_camera implementation="rot_z_only" medium="leds" show_rays="true" />
+        <range_and_bearing implementation="medium" medium="rab" />
+      </sensors>
+      <params >
+        <diffusion go_straight_angle_range="-5:5"
+                   delta="0.1" />
+        <wheel_turning hard_turn_angle_threshold="90"
+                       soft_turn_angle_threshold="70"
+                       no_turn_angle_threshold="10"
+                       max_speed="20" />
+        <state reach_distance="40" 
+               min_time="35"/>
+        <caging target_robot_distance="50"
+                target_object_distance="25"
+                  robot_gain="1000"
+                  object_gain="1000"
+                  exponent="2" />
+      </params>
+    </footbot_shape_detection_controller>
+
+  </controllers>
+
+  <!-- *********************** -->
+  <!-- * Arena configuration * -->
+  <!-- *********************** -->
+  <arena size="5, 5, 1" center="0,0,0.5">
+
+    <box id="wall_north" size="4,0.1,0.5" movable="false">
+      <body position="0,2,0" orientation="0,0,0" />
+    </box>
+    <box id="wall_south" size="4,0.1,0.5" movable="false">
+      <body position="0,-2,0" orientation="0,0,0" />
+    </box>
+    <box id="wall_east" size="0.1,4,0.5" movable="false">
+      <body position="2,0,0" orientation="0,0,0" />
+    </box>
+    <box id="wall_west" size="0.1,4,0.5" movable="false">
+      <body position="-2,0,0" orientation="0,0,0" />
+    </box>
+
+    
+
+    <!--
+        We distribute 2 boxes uniformly in position and rotation around Z.
+    -->
+    <!-- <distribute>
+      <position method="uniform" min="-0.5,-0.5,0" max="0.5,,0" />
+      <orientation method="uniform" min="0,0,0" max="360,0,0" />
+      <entity quantity="1" max_trials="100">
+        <box id="b" size="1,1,0.3" movable="false">
+        <leds medium="leds">"
+            <led offset="0.0,0.51,0.15" anchor="origin" color="green" />
+            <led offset="0.4,0.51,0.15" anchor="origin" color="green" />
+            <led offset="0.3,0.51,0.15" anchor="origin" color="green" />
+            <led offset="0.2,0.51,0.15" anchor="origin" color="green" />
+            <led offset="0.1,0.51,0.15" anchor="origin" color="green" />
+            <led offset="0.0,0.51,0.15" anchor="origin" color="green" />
+            <led offset="-0.4,0.51,0.15" anchor="origin" color="green" />
+            <led offset="-0.3,0.51,0.15" anchor="origin" color="green" />
+            <led offset="-0.2,0.51,0.15" anchor="origin" color="green" />
+            <led offset="-0.1,0.51,0.15" anchor="origin" color="green" />
+
+            <led offset="0.51,0.0,0.15" anchor="origin" color="green" />
+            <led offset="0.51,0.4,0.15" anchor="origin" color="green" />
+            <led offset="0.51,0.3,0.15" anchor="origin" color="green" />
+            <led offset="0.51,0.2,0.15" anchor="origin" color="green" />
+            <led offset="0.51,0.1,0.15" anchor="origin" color="green" />
+            <led offset="0.51,-0.0,0.15" anchor="origin" color="green" />
+            <led offset="0.51,-0.4,0.15" anchor="origin" color="green" />
+            <led offset="0.51,-0.3,0.15" anchor="origin" color="green" />
+            <led offset="0.51,-0.2,0.15" anchor="origin" color="green" />
+            <led offset="0.51,-0.1,0.15" anchor="origin" color="green" />
+
+            <led offset="0.0,-0.51,0.15" anchor="origin" color="green" />
+            <led offset="0.4,-0.51,0.15" anchor="origin" color="green" />
+            <led offset="0.3,-0.51,0.15" anchor="origin" color="green" />
+            <led offset="0.2,-0.51,0.15" anchor="origin" color="green" />
+            <led offset="0.1,-0.51,0.15" anchor="origin" color="green" />
+            <led offset="-0.0,-0.51,0.15" anchor="origin" color="green" />
+            <led offset="-0.4,-0.51,0.15" anchor="origin" color="green" />
+            <led offset="-0.3,-0.51,0.15" anchor="origin" color="green" />
+            <led offset="-0.2,-0.51,0.15" anchor="origin" color="green" />
+            <led offset="-0.1,-0.51,0.15" anchor="origin" color="green" />
+
+            <led offset="-0.51,0.0,0.15" anchor="origin" color="green" />
+            <led offset="-0.51,0.4,0.15" anchor="origin" color="green" />
+            <led offset="-0.51,0.3,0.15" anchor="origin" color="green" />
+            <led offset="-0.51,0.2,0.15" anchor="origin" color="green" />
+            <led offset="-0.51,0.1,0.15" anchor="origin" color="green" />
+            <led offset="-0.51,-0.0,0.15" anchor="origin" color="green" />
+            <led offset="-0.51,-0.4,0.15" anchor="origin" color="green" />
+            <led offset="-0.51,-0.3,0.15" anchor="origin" color="green" />
+            <led offset="-0.51,-0.2,0.15" anchor="origin" color="green" />
+            <led offset="-0.51,-0.1,0.15" anchor="origin" color="green" />
+
+            <led offset="0.51,0.51,0.15" anchor="origin" color="green" />
+            <led offset="0.51,-0.51,0.15" anchor="origin" color="green" />
+            <led offset="-0.51,0.51,0.15" anchor="origin" color="green" />
+            <led offset="-0.51,-0.51,0.15" anchor="origin" color="green" />
+          </leds> 
+        </box>
+      </entity>
+    </distribute> -->
+
+    <!--
+        You can distribute entities randomly. Here, we distribute
+        10 foot-bots in this way:
+        - the position is uniformly distributed
+        on the ground, in the square whose corners are (-2,-2) and (2,2)
+        - the orientations are non-zero only when rotating around Z and chosen
+        from a gaussian distribution, whose mean is zero degrees and
+        standard deviation is 360 degrees.
+    -->
+    <distribute>
+      <position method="uniform" min="-2,-2,0" max="2,2,0" />
+      <orientation method="gaussian" mean="0,0,0" std_dev="360,0,0" />
+      <entity quantity="12" max_trials="100">
+        <foot-bot id="fb">
+          <controller config="fsdc" />
+        </foot-bot>
+      </entity>
+    </distribute>
+
+    <!--
+        We distribute cylinders uniformly in position and with
+        constant rotation (rotating a cylinder around Z does not
+        matter)
+    -->
+    <distribute>
+      <position method="uniform" min="-1,-1,0" max="1,1,0" />
+      <orientation method="constant" values="0,0,0" />
+      <entity quantity="1" max_trials="100">
+        <cylinder id="c" height="0.3" radius="0.5" movable="false">
+          <leds medium="leds">"
+            <led offset="0.5,0,0.15" anchor="origin" color="green" />
+            <led offset="-0.5,0,0.15" anchor="origin" color="green" />
+            <led offset="0,0.5,0.15" anchor="origin" color="green" />
+            <led offset="0,-0.5,0.15" anchor="origin" color="green" />
+            <led offset="0.353,0.353,0.15" anchor="origin" color="green" />
+            <led offset="0.353,-0.353,0.15" anchor="origin" color="green" />
+            <led offset="-0.353,0.353,0.15" anchor="origin" color="green" />
+            <led offset="-0.353,-0.353,0.15" anchor="origin" color="green" />
+            <led offset="0.462,0.192,0.15" anchor="origin" color="green" />
+            <led offset="0.462,-0.192,0.15" anchor="origin" color="green" />
+            <led offset="-0.462,0.192,0.15" anchor="origin" color="green" />
+            <led offset="-0.462,-0.192,0.15" anchor="origin" color="green" />
+            <led offset="0.192,0.462,0.15" anchor="origin" color="green" />
+            <led offset="0.192,-0.462,0.15" anchor="origin" color="green" />
+            <led offset="-0.192,0.462,0.15" anchor="origin" color="green" />
+            <led offset="-0.192,-0.462,0.15" anchor="origin" color="green" />
+            <led offset="0.251,0.434,0.15" anchor="origin" color="green" />
+            <led offset="0.251,-0.434,0.15" anchor="origin" color="green" />
+            <led offset="-0.251,0.434,0.15" anchor="origin" color="green" />
+            <led offset="-0.251,-0.434,0.15" anchor="origin" color="green" />
+            <led offset="0.434,0.251,0.15" anchor="origin" color="green" />
+            <led offset="0.434,-0.251,0.15" anchor="origin" color="green" />
+            <led offset="-0.434,0.251,0.15" anchor="origin" color="green" />
+            <led offset="-0.434,-0.251,0.15" anchor="origin" color="green" />
+          </leds>
+        </cylinder>          
+      </entity>
+    </distribute>
+
+  </arena>
+
+  <!-- ******************* -->
+  <!-- * Physics engines * -->
+  <!-- ******************* -->
+  <physics_engines>
+    <dynamics2d id="dyn2d" />
+    <!-- <pointmass3d id="dyn2d" /> -->
+  </physics_engines>
+
+  <!-- ********* -->
+  <!-- * Media * -->
+  <!-- ********* -->
+  <media>
+    <range_and_bearing id="rab" />
+    <led id="leds" />
+  </media>
+  <!-- ****************** -->
+  <!-- * Visualization * -->
+  <!-- ****************** -->
+  <visualization>
+    <qt-opengl>
+      <camera>
+        <placement idx="0" position="-1.37702,-1.04453,0.308332" look_at="-1.1334,-1.85855,-0.21895" up="0.15118,-0.505144,0.849691" lens_focal_length="20" />
+        <placement idx="3" position="2,2,2" look_at="-2,-2,0" lens_focal_length="20"/>
+      </camera>
+    </qt-opengl>
+  </visualization>
+
+</argos-configuration>

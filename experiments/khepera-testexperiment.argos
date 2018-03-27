@@ -17,7 +17,7 @@
   <controllers>
 
     <kheperaiv_shape_detection_controller id="khivsdc"
-                               library="build/controllers/khaperaiv_shape_detection/libkheperaiv_shape_detection">
+                               library="build/controllers/kheperaiv_shape_detection/libkheperaiv_shape_detection">
       <actuators>
         <differential_steering implementation="default" />
       </actuators>

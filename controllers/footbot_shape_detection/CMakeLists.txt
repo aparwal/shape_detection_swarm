@@ -1,0 +1,5 @@
+add_library(footbot_shape_detection MODULE footbot_shape_detection.h footbot_shape_detection.cpp)
+target_link_libraries(footbot_shape_detection
+  argos3core_simulator
+  argos3plugin_simulator_footbot
+  argos3plugin_simulator_genericrobot)
