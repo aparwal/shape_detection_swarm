@@ -140,6 +140,9 @@ public:
       SStateData();
       void Init(TConfigurationNode& t_node);
       void Reset();
+
+      Real a;
+      Real b;
    };
 
    /*
@@ -173,6 +176,11 @@ public:
     */
    virtual void Destroy() {}
 
+   /* Function to access data in QT user functions*/
+   inline SStateData& GetStateData() {
+      return m_sStateData;
+   }
+
 private:
    /*
     * Updates the state information.
@@ -189,6 +197,7 @@ private:
     * Calculates the Caging interaction vector.
     */
    virtual CVector2 CagingVector();
+   CVector2 CagingVector2();
 
    /*State specific functions will go here*/
    // TODO

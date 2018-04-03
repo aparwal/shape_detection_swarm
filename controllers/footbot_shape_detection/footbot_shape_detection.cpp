@@ -6,6 +6,8 @@
 #include <argos3/core/utility/math/vector2.h>
 /* Logging */
 #include <argos3/core/utility/logging/argos_log.h>
+#include <vector>
+#include <math.h>
 
 /****************************************/
 /****************************************/
@@ -81,6 +83,7 @@ void FootBotShapeDetection::SStateData::Reset() {
    ObjectVisibility = false;
    ObjectReached = false;
    TimeInMoveAround = 0;
+   
 }
 
 void FootBotShapeDetection::SStateData::Init(TConfigurationNode& t_node) {
@@ -132,7 +135,7 @@ void FootBotShapeDetection::Init(TConfigurationNode& t_node) {
     m_pcCamera    = GetSensor  <CCI_ColoredBlobOmnidirectionalCameraSensor>("colored_blob_omnidirectional_camera");
     m_pcRABA      = GetActuator<CCI_RangeAndBearingActuator     >("range_and_bearing"    );
     m_pcRABS      = GetSensor  <CCI_RangeAndBearingSensor       >("range_and_bearing"    );
-      // m_pcLEDs->SetAllColors(CColor::BLACK);
+    // m_pcLEDs->SetAllColors(CColor::BLACK);
       
 
       /*
@@ -152,6 +155,10 @@ void FootBotShapeDetection::Init(TConfigurationNode& t_node) {
    }
    /* Enable camera filtering */
    m_pcCamera->Enable();
+    m_sStateData.b=99;
+   if (GetId() == "fb0")
+    m_sStateData.b=10;
+  // m_sStateData.b = 33;
 }
 
 /****************************************/
@@ -163,7 +170,7 @@ void FootBotShapeDetection::Reset() {
    /* Set LED color */
    // m_pcLEDs->SetAllColors(CColor::BLACK);
    m_pcRABA->ClearData();
-   m_pcRABA->SetData(0, 0);
+   // m_pcRABA->SetData(0, m_sStateData.b);
 }
 
 /****************************************/
@@ -311,7 +318,41 @@ CVector2 FootBotShapeDetection::VectorToObject() {
 }
 /****************************************/
 /****************************************/
-
+CVector2 FootBotShapeDetection::CagingVector2() {
+    const CCI_RangeAndBearingSensor::TReadings& tPackets = m_pcRABS->GetReadings();
+    // std::vector<int> rangelist;
+    int first=0,second=1;
+    if (tPackets.size() >= 2)
+    {
+      for(size_t i = 1; i < tPackets.size(); ++i) 
+      {
+        if ( tPackets[i].Range < tPackets[second].Range )
+        {
+          second = i;
+        }
+        if( tPackets[i].Range < tPackets[first].Range )
+        {
+          second = first;
+          first = i;
+        }
+        // m_sStateData.b = tPackets[i].Range;
+        // if((tPackets[i].Data[0] != 0) & (tPackets[i].Range < m_sCagingParams.TargetRobotDistance * 1.30f))
+          // anglelist.push_back(tPackets[i].HorizontalBearing);
+      }
+      m_sStateData.b = (tPackets[first].HorizontalBearing-tPackets[second].HorizontalBearing).GetValue();
+      if (std::abs(std::cos(m_sStateData.b)) < 0.5)
+        m_sStateData.b = 33;
+    }
+    else
+      m_sStateData.b=999;
+    // if (anglelist.size() == 2)
+    // {
+      // if(std::abs(std::cos((anglelist[0]-anglelist[1]).GetValue())) < 0.5)
+        // m_sStateData.b = 00;
+        // m_pcLEDs->SetSingleColor(12, CColor::RED);
+    // }
+          
+}
 /****************************************/
 /****************************************/
 
@@ -348,8 +389,7 @@ CVector2 FootBotShapeDetection::CagingVector() {
                 fLJ = m_sCagingParams.GeneralizedLennardJones(sReadings.BlobList[i]->Distance,
                     m_sCagingParams.TargetRobotDistance,m_sCagingParams.RobotGain);
                 /* Sum to accumulator */
-                cAccum += CVector2(fLJ,
-                                   sReadings.BlobList[i]->Angle);
+                cAccum += CVector2(fLJ, sReadings.BlobList[i]->Angle);
                 /* Increment the blobs seen counter */
                 ++unBlobsSeen;
             }
@@ -422,12 +462,16 @@ void FootBotShapeDetection::ControlStep() {
         case SStateData::CAGE_OBJECT:{
             m_pcLEDs->SetSingleColor(12, CColor::RED);
             CageObject();
+            m_pcRABA->SetData(0, (int)m_sStateData.b);
+            CagingVector2();
             break;
         }
         default: 
             LOGERR << "Unkown State: "<<m_sStateData.State << std::endl;
     }
     UpdateState();
+    
+    
 
 }
    
