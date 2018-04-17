@@ -294,7 +294,7 @@ CVector2 FootBotMapping::VectorToObject() {
             	// 	LOG << sReadings.BlobList[i]->Angle <<" id:"<< GetId().c_str()<<std::endl;
 
             	if (FrontAngleRange.WithinMinBoundIncludedMaxBoundIncluded(sReadings.BlobList[i]->Angle))
-            		if (sReadings.BlobList[i]->Distance < m_sStateData.ReachDistance * 1.0f)
+            		if (sReadings.BlobList[i]->Distance < m_sStateData.ReachDistance * 1.1f)
 
             			m_sStateData.IncomingRobotSeen = true;
 
