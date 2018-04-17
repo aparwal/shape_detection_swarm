@@ -423,17 +423,23 @@ void FootBotMapping::ApproachObject() {
 void FootBotMapping::CageObject() {
 	
 	Real fNormDistExp = ::pow(m_sStateData.ReachDistance / m_sStateData.ObjVec.Length(), 2);
-   	CVector2 Object_Distance_Correction = CVector2(-10000 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
+   	CVector2 Object_Distance_Correction = CVector2(-500 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
 
 
-	if(!m_sStateData.ObjectReached)
-		SetWheelSpeedsFromVector(10*Object_Distance_Correction.Normalize());
-	else
-		SetWheelSpeedsFromVector(10*m_sStateData.ObjVec.Normalize().Rotate(CRadians(-1*CRadians::PI_OVER_TWO)));//+ Object_Distance_Correction.Normalize());
+	// if(!m_sStateData.ObjectReached)
+	// 	SetWheelSpeedsFromVector(10*Object_Distance_Correction.Normalize());
+	// else
+		SetWheelSpeedsFromVector(10*m_sStateData.ObjVec.Normalize().Rotate(CRadians(-1*CRadians::PI_OVER_TWO))+ Object_Distance_Correction.Normalize());
 }
 /****************************************/
 /****************************************/
 void FootBotMapping::MapObject() {
+
+	Real fNormDistExp = ::pow(m_sStateData.ReachDistance / m_sStateData.ObjVec.Length(), 2);
+   	CVector2 Object_Distance_Correction = CVector2(-500 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
+
+
+   	
 	m_pcWheels->SetLinearVelocity(0,0);
 }
 /****************************************/
