@@ -412,6 +412,9 @@ void FootBotMapping::UpdateState() {
               m_sStateData.State = SStateData::AT_VERTEX;
             break;
         }
+        case SStateData::AT_VERTEX:{
+            break;
+        }
 
         default:
             LOGERR << "Unkown UpdateState: "<<m_sStateData.State <<" id:"<< GetId().c_str() << std::endl;
@@ -436,8 +439,10 @@ void FootBotMapping::CageObject() {
    	CVector2 Object_Distance_Correction = CVector2(-10000 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
 
 
-	 if(!m_sStateData.ObjectReached)
+	 if(!m_sStateData.ObjectReached){
 	 	SetWheelSpeedsFromVector(10*Object_Distance_Correction.Normalize());
+	 	
+	}
 	 else
 		SetWheelSpeedsFromVector(10*m_sStateData.ObjVec.Normalize().Rotate(CRadians(-1*CRadians::PI_OVER_TWO))+ Object_Distance_Correction.Normalize());
 }
@@ -445,8 +450,8 @@ void FootBotMapping::CageObject() {
 /****************************************/
 void FootBotMapping::MapObject() {
 
-	Real fNormDistExp = ::pow(m_sStateData.ReachDistance / m_sStateData.ObjVec.Length(), 2);
-   	CVector2 Object_Distance_Correction = CVector2(-500 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
+	// Real fNormDistExp = ::pow(m_sStateData.ReachDistance / m_sStateData.ObjVec.Length(), 2);
+ //   	CVector2 Object_Distance_Correction = CVector2(-500 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
     if ((m_sStateData.ObjVec.Angle().GetAbsoluteValue() > 0.1) && (!m_sStateData.facing_object)){
         m_pcWheels->SetLinearVelocity(-2,2);
     }
@@ -459,7 +464,10 @@ void FootBotMapping::MapObject() {
         else if(m_sStateData.ObjVec.Length() < (m_sStateData.ReachDistance)-0.5){
             m_pcWheels->SetLinearVelocity(-2,-2);
         }
-        else{m_pcWheels->SetLinearVelocity(0,0);}
+        else{
+        	m_sStateData.vertex_bot = CheckForVertex();
+        	m_pcWheels->SetLinearVelocity(0,0);
+        }
     }
 
 //m_pcWheels->SetLinearVelocity(0,0);
@@ -469,9 +477,48 @@ void FootBotMapping::MapObject() {
 /****************************************/
 void FootBotMapping::VertexFunction() {
 // TRANSMIT MESSAGE ---->
+	m_pcWheels->SetLinearVelocity(0,0);
 }
 /****************************************/
 /****************************************/
+
+/****************************************/
+/****************************************/
+bool FootBotMapping::CheckForVertex() {
+	const CCI_RangeAndBearingSensor::TReadings& tPackets = m_pcRABS->GetReadings();
+    
+    int first=0,second=1;
+    if (tPackets.size() >= 2)
+    {
+    	/*Fing the two closest neighbours*/
+      for(size_t i = 1; i < tPackets.size(); ++i) 
+      {
+        if ( tPackets[i].Range < tPackets[second].Range )
+        {
+          second = i;
+        }
+        if( tPackets[i].Range < tPackets[first].Range )
+        {
+          second = first;
+          first = i;
+        }
+        // m_sStateData.b = tPackets[i].Range;
+        // if((tPackets[i].Data[0] != 0) & (tPackets[i].Range < m_sCagingParams.TargetRobotDistance * 1.30f))
+          // anglelist.push_back(tPackets[i].HorizontalBearing);
+      }
+
+      /*Angle between the two closest neighbours*/
+      Real diff_angle = (tPackets[first].HorizontalBearing-tPackets[second].HorizontalBearing).GetAbsoluteValue();
+      
+      if (diff_angle < 2.7){
+
+      	LOG << GetId() << std::endl;
+        return true;
+
+    	}
+    }
+    return false;
+}
 
 /*
  * This statement notifies ARGoS of the existence of the controller.

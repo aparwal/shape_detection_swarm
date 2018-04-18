@@ -143,6 +143,7 @@ public:
 
       bool facing_object;
 
+
       bool vertex_bot;
 
 
@@ -204,6 +205,8 @@ private:
 
    /* Get vector pointing towards object, length roughly equal to distance*/
    CVector2 VectorToObject();
+
+   bool CheckForVertex();
 
    /*State specific functions will go here*/
    void MapObject();

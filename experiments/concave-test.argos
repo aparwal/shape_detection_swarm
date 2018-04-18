@@ -24,18 +24,18 @@
         <range_and_bearing implementation="default" />
       </actuators>
       <sensors>
-        <footbot_proximity implementation="default" show_rays="false" />
-        <colored_blob_omnidirectional_camera implementation="rot_z_only" medium="leds" show_rays="false" />
+        <footbot_proximity implementation="default" show_rays="true" />
+        <colored_blob_omnidirectional_camera implementation="rot_z_only" medium="leds" show_rays="true" />
         <range_and_bearing implementation="medium" medium="rab" />
       </sensors>
       <params >
         <diffusion go_straight_angle_range="-5:5"
                    delta="0.1" />
         <wheel_turning hard_turn_angle_threshold="90"
-                       soft_turn_angle_threshold="89"
-                       no_turn_angle_threshold="05"
+                       soft_turn_angle_threshold="10"
+                       no_turn_angle_threshold="5"
                        max_speed="15" />
-        <state reach_distance="30" 
+        <state reach_distance="40" 
                min_time="100"/>
         <caging target_robot_distance="50"
                 target_object_distance="20"
@@ -138,7 +138,7 @@
                 distances="0.45,0.3,0"
                 layout="20,1,1" />
       <orientation method="constant" values="180,0,0" />
-      <entity quantity="17" max_trials="100">
+      <entity quantity="19" max_trials="100">
         <foot-bot id="fb" rab_data_size="500">
           <controller config="fmc" />
         </foot-bot>
@@ -171,12 +171,11 @@
       <!-- <user_functions library="build/loop_functions/shape_loop_functions/libshape_loop_functions"
                       label="shape_qtuser_functions" /> -->
       <camera>
-        <placement idx="5" position="-3.5,2,2" look_at="-5,-0,0" lens_focal_length="20" />
+        <placement idx="0" position="-3.5,2,2" look_at="-5,-0,0" lens_focal_length="20" />
         <placement idx="4" position="-1.37702,-1.04453,0.308332" look_at="-1.1334,-1.85855,-0.21895" up="0.15118,-0.505144,0.849691" lens_focal_length="20" />
         <placement idx="3" position="2,2,2" look_at="-2,-2,0" lens_focal_length="20"/>
         <placement idx="2" position="0,0,4" look_at="0,0.01,0.01" lens_focal_length="20"/>
         <placement idx="1" position="0,0,20" look_at="-1,0.01,0.01" lens_focal_length="80"/>
-	<placement idx="0" position="-5,0,10" look_at="-5,0.01,0.01" lens_focal_length="80"/>
       </camera>
     </qt-opengl>
   </visualization>
