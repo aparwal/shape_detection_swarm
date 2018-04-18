@@ -146,6 +146,7 @@ public:
 
       bool vertex_bot;
 
+       bool double_vertex;
 
       /* placeholder timestep variable*/
       // size_t MinimumMoveAroundTime;
@@ -213,6 +214,7 @@ private:
    void ApproachObject();
    void CageObject();
    void VertexFunction();
+    void CheckDoubleVertex();
 
    /* Sets the wheel speeds such that it ultimately follows the given vector*/
    void SetWheelSpeedsFromVector(const CVector2&);

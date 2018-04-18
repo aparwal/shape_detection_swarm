@@ -60,6 +60,7 @@ void FootBotMapping::SStateData::Reset() {
    IncomingRobotSeen = false;
    facing_object = false;
    vertex_bot = false;
+    double_vertex = false;
 }
 
 void FootBotMapping::SStateData::Init(TConfigurationNode& t_node) {
@@ -478,9 +479,39 @@ void FootBotMapping::MapObject() {
 void FootBotMapping::VertexFunction() {
 // TRANSMIT MESSAGE ---->
 	m_pcWheels->SetLinearVelocity(0,0);
+    CheckDoubleVertex();
 }
 /****************************************/
 /****************************************/
+// Checks for duplicate vertex nearby
+
+void FootBotMapping::CheckDoubleVertex() {
+    //Check if bot is a vertex bot
+    if (m_sStateData.vertex_bot){
+
+        //get camera blob readings
+        const CCI_ColoredBlobOmnidirectionalCameraSensor::SReadings& blobReadings = m_pcCamera->GetReadings();
+
+        /* Go through the camera readings to locate oject */
+        if(! blobReadings.BlobList.empty()) {
+
+            /* Check each element of bloblist */
+            for(size_t i = 0; i < blobReadings.BlobList.size(); ++i) {
+
+                /*Check for neighboring vertex */
+                if ((blobReadings.BlobList[i]->Color == CColor::YELLOW)) {
+                    LOG << blobReadings.BlobList[i]->Angle.GetValue() <<std::endl;
+
+                    /* Turn your vector status off if detecting another yellow vertex in vicinity at an angle */
+                    if (blobReadings.BlobList[i]->Angle.GetValue() < 0.1) {
+                        m_pcLEDs->SetSingleColor(12, CColor::WHITE);
+                        m_sStateData.double_vertex = true;
+                    }
+                }
+            }
+        }
+    }
+}
 
 /****************************************/
 /****************************************/
