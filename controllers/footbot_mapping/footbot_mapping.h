@@ -140,6 +140,8 @@ public:
 
       CVector2 ObjVec;
 
+       bool facing_object;
+
       /* placeholder timestep variable*/
       // size_t MinimumMoveAroundTime;
 

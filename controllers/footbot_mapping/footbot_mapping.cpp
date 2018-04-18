@@ -58,6 +58,7 @@ void FootBotMapping::SStateData::Reset() {
    ObjectCaged = false;
    RobotAhead = false;
    IncomingRobotSeen = false;
+    facing_object = false;
 }
 
 void FootBotMapping::SStateData::Init(TConfigurationNode& t_node) {
@@ -423,12 +424,12 @@ void FootBotMapping::ApproachObject() {
 void FootBotMapping::CageObject() {
 	
 	Real fNormDistExp = ::pow(m_sStateData.ReachDistance / m_sStateData.ObjVec.Length(), 2);
-   	CVector2 Object_Distance_Correction = CVector2(-500 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
+   	CVector2 Object_Distance_Correction = CVector2(-10000 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
 
 
-	// if(!m_sStateData.ObjectReached)
-	// 	SetWheelSpeedsFromVector(10*Object_Distance_Correction.Normalize());
-	// else
+	 if(!m_sStateData.ObjectReached)
+	 	SetWheelSpeedsFromVector(10*Object_Distance_Correction.Normalize());
+	 else
 		SetWheelSpeedsFromVector(10*m_sStateData.ObjVec.Normalize().Rotate(CRadians(-1*CRadians::PI_OVER_TWO))+ Object_Distance_Correction.Normalize());
 }
 /****************************************/
@@ -437,10 +438,23 @@ void FootBotMapping::MapObject() {
 
 	Real fNormDistExp = ::pow(m_sStateData.ReachDistance / m_sStateData.ObjVec.Length(), 2);
    	CVector2 Object_Distance_Correction = CVector2(-500 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
+    if ((m_sStateData.ObjVec.Angle().GetAbsoluteValue() > 0.1) && (!m_sStateData.facing_object)){
+        m_pcWheels->SetLinearVelocity(-2,2);
+    }
+    else{
+        m_sStateData.facing_object = true;
+
+        if(m_sStateData.ObjVec.Length() > (m_sStateData.ReachDistance)+0.5){
+            m_pcWheels->SetLinearVelocity(2,2);
+        }
+        else if(m_sStateData.ObjVec.Length() < (m_sStateData.ReachDistance)-0.5){
+            m_pcWheels->SetLinearVelocity(-2,-2);
+        }
+        else{m_pcWheels->SetLinearVelocity(0,0);}
+    }
 
 
-   	
-	m_pcWheels->SetLinearVelocity(0,0);
+//m_pcWheels->SetLinearVelocity(0,0);
 }
 /****************************************/
 /****************************************/
