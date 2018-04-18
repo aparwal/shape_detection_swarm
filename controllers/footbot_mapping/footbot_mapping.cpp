@@ -58,7 +58,8 @@ void FootBotMapping::SStateData::Reset() {
    ObjectCaged = false;
    RobotAhead = false;
    IncomingRobotSeen = false;
-    facing_object = false;
+   facing_object = false;
+   vertex_bot = false;
 }
 
 void FootBotMapping::SStateData::Init(TConfigurationNode& t_node) {
@@ -69,7 +70,7 @@ void FootBotMapping::SStateData::Init(TConfigurationNode& t_node) {
    catch(CARGoSException& ex) {
       THROW_ARGOSEXCEPTION_NESTED("Error initializing controller state parameters.", ex);
    }
-}  
+}
 
 
 FootBotMapping::SStateData::SStateData(){
@@ -87,7 +88,7 @@ FootBotMapping::FootBotMapping() :
    // m_pcRNG(NULL),
    m_pcCamera(NULL),
    m_pcRABA(NULL),
-   m_pcRABS(NULL) 
+   m_pcRABS(NULL)
    {}
 
 /****************************************/
@@ -104,14 +105,14 @@ void FootBotMapping::Init(TConfigurationNode& t_node) {
     */
     m_pcWheels    = GetActuator<CCI_DifferentialSteeringActuator>("differential_steering");
     m_pcProximity = GetSensor  <CCI_FootBotProximitySensor    >("footbot_proximity"  );
-   
+
     m_pcLEDs      = GetActuator<CCI_LEDsActuator                >("leds"                 );
     //  m_pcLight     = GetSensor  <CCI_FootBotLightSensor          >("footbot_light"        );
     m_pcCamera    = GetSensor  <CCI_ColoredBlobOmnidirectionalCameraSensor>("colored_blob_omnidirectional_camera");
     m_pcRABA      = GetActuator<CCI_RangeAndBearingActuator     >("range_and_bearing"    );
     m_pcRABS      = GetSensor  <CCI_RangeAndBearingSensor       >("range_and_bearing"    );
     // m_pcLEDs->SetAllColors(CColor::BLACK);
-      
+
 
       /*
        * Parse XML parameters
@@ -225,7 +226,7 @@ void FootBotMapping::SetWheelSpeedsFromVector(const CVector2& c_heading) {
 //    }
 //     /*If the angle of the vector is small enough and the closest obstacle
 //       is far enough, ignore the vector and go straight, otherwise return
-//       it*/ 
+//       it*/
 //    if(m_sDiffusionParams.GoStraightAngleRange.WithinMinBoundIncludedMaxBoundIncluded(cDiffusionVector.Angle()) &&
 //       cDiffusionVector.Length() < m_sDiffusionParams.Delta ) {
 //       b_collision = false;
@@ -251,7 +252,7 @@ CVector2 FootBotMapping::VectorToObject() {
     CRange<CRadians> FrontAngleRange(-1*CRadians::PI_OVER_FOUR,CRadians::PI_OVER_FOUR);
 
     CVector2 cAccum,current,nearest= CVector2(1000,0);
-    size_t unBlobsSeen = 0;   
+    size_t unBlobsSeen = 0;
 
     /* Get the camera readings */
     const CCI_ColoredBlobOmnidirectionalCameraSensor::SReadings& sReadings = m_pcCamera->GetReadings();
@@ -264,15 +265,15 @@ CVector2 FootBotMapping::VectorToObject() {
             if(sReadings.BlobList[i]->Color == CColor::GREEN) {
                 current = CVector2(sReadings.BlobList[i]->Distance,
                                sReadings.BlobList[i]->Angle);
-            
+
                 /* Find the closest reading */
                 if (current.SquareLength() < nearest.SquareLength()){
                     nearest = current;
                 }
 
-                /*Change state variable*/            
+                /*Change state variable*/
                 m_sStateData.ObjectVisibility = true;
-            }    
+            }
             /*Look for red*/
             if(sReadings.BlobList[i]->Color == CColor::RED) {
 
@@ -299,7 +300,7 @@ CVector2 FootBotMapping::VectorToObject() {
 
             			m_sStateData.IncomingRobotSeen = true;
 
-            	
+
 
             }
         }
@@ -323,7 +324,7 @@ CVector2 FootBotMapping::VectorToObject() {
 /****************************************/
 // CVector2 FootBotMapping::VectorOppositeObject(){
 //     CVector2 cAccum;
-//     size_t unBlobsSeen = 0;   
+//     size_t unBlobsSeen = 0;
 
 //     /* Get the camera readings */
 //     const CCI_ColoredBlobOmnidirectionalCameraSensor::SReadings& sReadings = m_pcCamera->GetReadings();
@@ -351,7 +352,7 @@ CVector2 FootBotMapping::VectorToObject() {
 /****************************************/
 
 void FootBotMapping::ControlStep() {
-  
+
     switch(m_sStateData.State){
         case SStateData::APPROACH_OBJECT:{
             // m_pcLEDs->SetSingleColor(12, CColor::BLUE);
@@ -368,12 +369,17 @@ void FootBotMapping::ControlStep() {
             MapObject();
             break;
         }
-        default: 
+        case SStateData::AT_VERTEX:{
+            m_pcLEDs->SetSingleColor(12, CColor::YELLOW);
+            VertexFunction();
+            break;
+        }
+        default:
             LOGERR << "Unkown State: "<<m_sStateData.State <<" id:"<< GetId().c_str()<<std::endl;
     }
     UpdateState();
 }
-   
+
 
 /****************************************/
 /****************************************/
@@ -390,7 +396,7 @@ void FootBotMapping::UpdateState() {
         }
         case SStateData::CAGE_OBJECT:{
             // if (!m_sStateData.ObjectReached)
-            // 	m_sStateData.State = SStateData::APPROACH_OBJECT;        	
+            // 	m_sStateData.State = SStateData::APPROACH_OBJECT;
             if (m_sStateData.ObjectCaged)
             	m_sStateData.State = SStateData::MAP_OBJECT;
             if (m_sStateData.IncomingRobotSeen){
@@ -401,10 +407,13 @@ void FootBotMapping::UpdateState() {
             break;
         }
         case SStateData::MAP_OBJECT:{
-            
+
+            if (m_sStateData.vertex_bot)
+              m_sStateData.State = SStateData::AT_VERTEX;
             break;
         }
-        default: 
+
+        default:
             LOGERR << "Unkown UpdateState: "<<m_sStateData.State <<" id:"<< GetId().c_str() << std::endl;
     }
 
@@ -422,7 +431,7 @@ void FootBotMapping::ApproachObject() {
 /****************************************/
 /****************************************/
 void FootBotMapping::CageObject() {
-	
+
 	Real fNormDistExp = ::pow(m_sStateData.ReachDistance / m_sStateData.ObjVec.Length(), 2);
    	CVector2 Object_Distance_Correction = CVector2(-10000 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
 
@@ -453,8 +462,13 @@ void FootBotMapping::MapObject() {
         else{m_pcWheels->SetLinearVelocity(0,0);}
     }
 
-
 //m_pcWheels->SetLinearVelocity(0,0);
+}
+
+/****************************************/
+/****************************************/
+void FootBotMapping::VertexFunction() {
+// TRANSMIT MESSAGE ---->
 }
 /****************************************/
 /****************************************/

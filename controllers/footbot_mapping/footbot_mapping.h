@@ -118,6 +118,7 @@ public:
         APPROACH_OBJECT=0,
         CAGE_OBJECT,
         MAP_OBJECT,
+        AT_VERTEX,
       } State;
 
       /* True when the object is visible */
@@ -140,7 +141,10 @@ public:
 
       CVector2 ObjVec;
 
-       bool facing_object;
+      bool facing_object;
+
+      bool vertex_bot;
+
 
       /* placeholder timestep variable*/
       // size_t MinimumMoveAroundTime;
@@ -202,10 +206,10 @@ private:
    CVector2 VectorToObject();
 
    /*State specific functions will go here*/
-   // TODO
    void MapObject();
    void ApproachObject();
    void CageObject();
+   void VertexFunction();
 
    /* Sets the wheel speeds such that it ultimately follows the given vector*/
    void SetWheelSpeedsFromVector(const CVector2&);
@@ -229,7 +233,7 @@ private:
     * of the XML configuration file, under the
     * <controllers><footbot_shape_detection_controller> section.
     */
- 
+
    /* The random number generator */
    // CRandom::CRNG* m_pcRNG;
    /* The controller state information */
