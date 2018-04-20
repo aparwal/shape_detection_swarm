@@ -8,7 +8,7 @@
 #include <argos3/core/utility/logging/argos_log.h>
 #include <vector>
 #include <math.h>
-
+#include <algorithm>
 /****************************************/
 /****************************************/
 
@@ -371,7 +371,7 @@ void FootBotMapping::ControlStep() {
         }
         case SStateData::AT_VERTEX:{
             m_pcLEDs->SetSingleColor(12, CColor::YELLOW);
-            VertexFunction();
+            MapObject();
             break;
         }
         default:
@@ -426,9 +426,9 @@ void FootBotMapping::UpdateState() {
 /****************************************/
 void FootBotMapping::ApproachObject() {
 	m_pcLEDs->SetSingleColor(12, CColor::BLUE);
-	if(m_sStateData.ObjectVisibility)
-		SetWheelSpeedsFromVector(m_sStateData.ObjVec);
-	else
+	// if(m_sStateData.ObjectVisibility)
+	// 	SetWheelSpeedsFromVector(m_sStateData.ObjVec);
+	// else
 		m_pcWheels->SetLinearVelocity(10,10);
 }
 /****************************************/
@@ -436,15 +436,15 @@ void FootBotMapping::ApproachObject() {
 void FootBotMapping::CageObject() {
 
 	Real fNormDistExp = ::pow(m_sStateData.ReachDistance / m_sStateData.ObjVec.Length(), 2);
-   	CVector2 Object_Distance_Correction = CVector2(-10000 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
+   	CVector2 Object_Distance_Correction = CVector2(-5000 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
 
 
-	 if(!m_sStateData.ObjectReached){
-	 	SetWheelSpeedsFromVector(10*Object_Distance_Correction.Normalize());
+	//  if(!m_sStateData.ObjectReached){
+	//  	SetWheelSpeedsFromVector(10*Object_Distance_Correction.Normalize());
 	 	
-	}
-	 else
-		SetWheelSpeedsFromVector(10*m_sStateData.ObjVec.Normalize().Rotate(CRadians(-1*CRadians::PI_OVER_TWO))+ Object_Distance_Correction.Normalize());
+	// }
+	//  else
+		SetWheelSpeedsFromVector(10*m_sStateData.ObjVec.Normalize().Rotate(CRadians(-1*CRadians::PI_OVER_TWO))+ 5*Object_Distance_Correction.Normalize());
 }
 /****************************************/
 /****************************************/
@@ -470,14 +470,46 @@ void FootBotMapping::MapObject() {
         }
     }
 
+    BroadcastIDs();
+
 //m_pcWheels->SetLinearVelocity(0,0);
 }
 
 /****************************************/
 /****************************************/
-void FootBotMapping::VertexFunction() {
+void FootBotMapping::BroadcastIDs() {
 // TRANSMIT MESSAGE ---->
-	m_pcWheels->SetLinearVelocity(0,0);
+
+	const CCI_RangeAndBearingSensor::TReadings& tPackets = m_pcRABS->GetReadings();
+	
+	for(size_t i = 1; i < tPackets.size(); ++i){
+		for (size_t j = 1; j <= tPackets[i].Data[0]; ++j){		
+			if(std::find(m_sStateData.vertex_list.begin(), m_sStateData.vertex_list.end(), tPackets[i].Data[j])!=m_sStateData.vertex_list.end()){
+			}
+			else{
+				m_sStateData.vertex_list.push_back( tPackets[i].Data[j] );
+			}
+		}
+	}
+	if (m_sStateData.vertex_bot){
+		if(std::find(m_sStateData.vertex_list.begin(), m_sStateData.vertex_list.end(), std::stoi(GetId().c_str()))!=m_sStateData.vertex_list.end()){
+		}
+		else{
+			m_sStateData.vertex_list.push_back(std::stoi(GetId().c_str()));
+		}
+	}
+
+	std::sort(m_sStateData.vertex_list.begin(), m_sStateData.vertex_list.end());
+
+	LOG << GetId() << ": " <<m_sStateData.vertex_list.size() << std::endl;
+	
+	m_pcRABA->SetData(0,m_sStateData.vertex_list.size());
+
+	for (int i = 1; i <= m_sStateData.vertex_list.size(); ++i)
+	{
+		m_pcRABA->SetData(i,m_sStateData.vertex_list[i-1]);
+	}
+
 }
 /****************************************/
 /****************************************/

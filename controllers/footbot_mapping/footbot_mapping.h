@@ -22,6 +22,7 @@
 #include <argos3/plugins/robots/generic/control_interface/ci_range_and_bearing_sensor.h>
 /* Vector2 definitions */
 #include <argos3/core/utility/math/vector2.h>
+#include <vector>
 
 /*
  * All the ARGoS stuff in the 'argos' namespace.
@@ -139,13 +140,17 @@ public:
       /* Distance from object to declare "reached"*/
       Real ReachDistance;
 
+      /*Vector to nearest point on the object*/
       CVector2 ObjVec;
 
+      /*true when facing directly towards objeect while mapping*/  
       bool facing_object;
 
-
+      /*true when at vertex*/
       bool vertex_bot;
 
+      /*List of vertices*/
+      std::vector<int> vertex_list;
 
       /* placeholder timestep variable*/
       // size_t MinimumMoveAroundTime;
@@ -212,7 +217,7 @@ private:
    void MapObject();
    void ApproachObject();
    void CageObject();
-   void VertexFunction();
+   void BroadcastIDs();
 
    /* Sets the wheel speeds such that it ultimately follows the given vector*/
    void SetWheelSpeedsFromVector(const CVector2&);
