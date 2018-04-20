@@ -66,70 +66,46 @@
     </box>
 
     
-
-    <box id="b" size="1,1,0.3" movable="false">
+    <cylinder id="c" height="0.3" radius="0.5" movable="false">
       <body position="-5,0,0" orientation="0,0,0"/>
-      <leds medium="leds">"
-        <!-- <distribute>
-          <offset method="grid"
-                    center="0,0,0"
-                    distances="0.2,0.2,0"
-                    layout="10,10,1" />
-          <entity quantity="100" max_trials="100">
-              <led anchor="origin" color="green" />
-          </entity>
-        </distribute> -->
-        <led offset="0.0,0.51,0.15" anchor="origin" color="green" />
-        <led offset="0.4,0.51,0.15" anchor="origin" color="green" />
-        <led offset="0.3,0.51,0.15" anchor="origin" color="green" />
-        <led offset="0.2,0.51,0.15" anchor="origin" color="green" />
-        <led offset="0.1,0.51,0.15" anchor="origin" color="green" />
-        <led offset="0.0,0.51,0.15" anchor="origin" color="green" />
-        <led offset="-0.4,0.51,0.15" anchor="origin" color="green" />
-        <led offset="-0.3,0.51,0.15" anchor="origin" color="green" />
-        <led offset="-0.2,0.51,0.15" anchor="origin" color="green" />
-        <led offset="-0.1,0.51,0.15" anchor="origin" color="green" />
+        <leds medium="leds">"
+            <led offset="0.5,0,0.15" anchor="origin" color="green" />
+            <led offset="-0.5,0,0.15" anchor="origin" color="green" />
+            <led offset="0,0.5,0.15" anchor="origin" color="green" />
+            <led offset="0,-0.5,0.15" anchor="origin" color="green" />
+            <led offset="0.353,0.353,0.15" anchor="origin" color="green" />
+            <led offset="0.353,-0.353,0.15" anchor="origin" color="green" />
+            <led offset="-0.353,0.353,0.15" anchor="origin" color="green" />
+            <led offset="-0.353,-0.353,0.15" anchor="origin" color="green" />
+            
+            <led offset="0.462,0.192,0.15" anchor="origin" color="green" />
+            <led offset="0.462,-0.192,0.15" anchor="origin" color="green" />
+            <led offset="-0.462,0.192,0.15" anchor="origin" color="green" />
+            <led offset="-0.462,-0.192,0.15" anchor="origin" color="green" />
+            <led offset="0.192,0.462,0.15" anchor="origin" color="green" />
+            <led offset="0.192,-0.462,0.15" anchor="origin" color="green" />
+            <led offset="-0.192,0.462,0.15" anchor="origin" color="green" />
+            <led offset="-0.192,-0.462,0.15" anchor="origin" color="green" />
+            
+            <led offset="0.0976,0.491,0.15" anchor="origin" color="green" />
+            <led offset="0.0976,-0.491,0.15" anchor="origin" color="green" />
+            <led offset="-0.0976,0.491,0.15" anchor="origin" color="green" />
+            <led offset="-0.0976,-0.491,0.15" anchor="origin" color="green" />
+            <led offset="0.491,0.0976,0.15" anchor="origin" color="green" />
+            <led offset="0.491,-0.0976,0.15" anchor="origin" color="green" />
+            <led offset="-0.491,0.0976,0.15" anchor="origin" color="green" />
+            <led offset="-0.491,-0.0976,0.15" anchor="origin" color="green" />
 
-        <led offset="0.51,0.0,0.15" anchor="origin" color="green" />
-        <led offset="0.51,0.4,0.15" anchor="origin" color="green" />
-        <led offset="0.51,0.3,0.15" anchor="origin" color="green" />
-        <led offset="0.51,0.2,0.15" anchor="origin" color="green" />
-        <led offset="0.51,0.1,0.15" anchor="origin" color="green" />
-        <led offset="0.51,-0.0,0.15" anchor="origin" color="green" />
-        <led offset="0.51,-0.4,0.15" anchor="origin" color="green" />
-        <led offset="0.51,-0.3,0.15" anchor="origin" color="green" />
-        <led offset="0.51,-0.2,0.15" anchor="origin" color="green" />
-        <led offset="0.51,-0.1,0.15" anchor="origin" color="green" />
-
-        <led offset="0.0,-0.51,0.15" anchor="origin" color="green" />
-        <led offset="0.4,-0.51,0.15" anchor="origin" color="green" />
-        <led offset="0.3,-0.51,0.15" anchor="origin" color="green" />
-        <led offset="0.2,-0.51,0.15" anchor="origin" color="green" />
-        <led offset="0.1,-0.51,0.15" anchor="origin" color="green" />
-        <led offset="-0.0,-0.51,0.15" anchor="origin" color="green" />
-        <led offset="-0.4,-0.51,0.15" anchor="origin" color="green" />
-        <led offset="-0.3,-0.51,0.15" anchor="origin" color="green" />
-        <led offset="-0.2,-0.51,0.15" anchor="origin" color="green" />
-        <led offset="-0.1,-0.51,0.15" anchor="origin" color="green" />
-
-        <led offset="-0.51,0.0,0.15" anchor="origin" color="green" />
-        <led offset="-0.51,0.4,0.15" anchor="origin" color="green" />
-        <led offset="-0.51,0.3,0.15" anchor="origin" color="green" />
-        <led offset="-0.51,0.2,0.15" anchor="origin" color="green" />
-        <led offset="-0.51,0.1,0.15" anchor="origin" color="green" />
-        <led offset="-0.51,-0.0,0.15" anchor="origin" color="green" />
-        <led offset="-0.51,-0.4,0.15" anchor="origin" color="green" />
-        <led offset="-0.51,-0.3,0.15" anchor="origin" color="green" />
-        <led offset="-0.51,-0.2,0.15" anchor="origin" color="green" />
-        <led offset="-0.51,-0.1,0.15" anchor="origin" color="green" />
-
-        <led offset="0.51,0.51,0.15" anchor="origin" color="green" />
-        <led offset="0.51,-0.51,0.15" anchor="origin" color="green" />
-        <led offset="-0.51,0.51,0.15" anchor="origin" color="green" />
-        <led offset="-0.51,-0.51,0.15" anchor="origin" color="green" />
-      </leds> 
-    </box>
-
+            <led offset="0.416,0.278,0.15" anchor="origin" color="green" />
+            <led offset="0.416,-0.278,0.15" anchor="origin" color="green" />
+            <led offset="-0.416,0.278,0.15" anchor="origin" color="green" />
+            <led offset="-0.416,-0.278,0.15" anchor="origin" color="green" />
+            <led offset="0.278,0.416,0.15" anchor="origin" color="green" />
+            <led offset="0.278,-0.416,0.15" anchor="origin" color="green" />
+            <led offset="-0.278,0.416,0.15" anchor="origin" color="green" />
+            <led offset="-0.278,-0.416,0.15" anchor="origin" color="green" />
+      </leds>
+    </cylinder>          
 
 
     <distribute>
