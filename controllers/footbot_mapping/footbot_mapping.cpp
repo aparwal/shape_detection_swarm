@@ -466,12 +466,15 @@ void FootBotMapping::MapObject() {
         }
         else{
         	m_sStateData.vertex_bot = CheckForVertex();
+        	CheckNoDuplicateVertex();
         	m_pcWheels->SetLinearVelocity(0,0);
+        	m_sStateData.time_in_state++;
         }
     }
 
-    BroadcastIDs();
-
+		// CheckNoDuplicateVertex();
+		if (m_sStateData.time_in_state > 100)
+    	BroadcastIDs();
 //m_pcWheels->SetLinearVelocity(0,0);
 }
 
@@ -513,6 +516,27 @@ void FootBotMapping::BroadcastIDs() {
 }
 /****************************************/
 /****************************************/
+void FootBotMapping::CheckNoDuplicateVertex(){
+
+	const CCI_ColoredBlobOmnidirectionalCameraSensor::SReadings& blobReadings = m_pcCamera->GetReadings();
+
+  if(! blobReadings.BlobList.empty()) {
+
+    for(size_t i = 0; i < blobReadings.BlobList.size(); ++i) {
+
+      if ((blobReadings.BlobList[i]->Color == CColor::YELLOW)) {
+
+        // LOG << blobReadings.BlobList[i]->Angle.GetValue() <<std::endl;
+
+        if (blobReadings.BlobList[i]->Angle.GetValue() > 0) {
+
+            m_pcLEDs->SetSingleColor(12, CColor::WHITE);
+            m_sStateData.vertex_bot = false;
+        }
+      }
+    }
+  }
+}
 
 /****************************************/
 /****************************************/
@@ -544,7 +568,7 @@ bool FootBotMapping::CheckForVertex() {
       
       if (diff_angle < 2.7){
 
-      	LOG << GetId() << std::endl;
+      	// LOG << GetId() << std::endl;
         return true;
 
     	}

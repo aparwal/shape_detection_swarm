@@ -152,6 +152,9 @@ public:
       /*List of vertices*/
       std::vector<int> vertex_list;
 
+      /*Time counter*/
+      size_t time_in_state;
+
       /* placeholder timestep variable*/
       // size_t MinimumMoveAroundTime;
 
@@ -212,6 +215,7 @@ private:
    CVector2 VectorToObject();
 
    bool CheckForVertex();
+   void CheckNoDuplicateVertex();
 
    /*State specific functions will go here*/
    void MapObject();
