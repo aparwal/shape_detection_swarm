@@ -390,8 +390,8 @@ void FootBotMapping::UpdateState() {
     	case SStateData::APPROACH_OBJECT:{
             if (m_sStateData.ObjectReached)
             	m_sStateData.State = SStateData::CAGE_OBJECT;
-            if (m_sStateData.ObjectCaged)
-            	m_sStateData.State = SStateData::MAP_OBJECT;
+            // if (m_sStateData.ObjectCaged)
+            // 	m_sStateData.State = SStateData::MAP_OBJECT;
             break;
         }
         case SStateData::CAGE_OBJECT:{
@@ -429,7 +429,12 @@ void FootBotMapping::ApproachObject() {
 	// if(m_sStateData.ObjectVisibility)
 	// 	SetWheelSpeedsFromVector(m_sStateData.ObjVec);
 	// else
-		m_pcWheels->SetLinearVelocity(10,10);
+	m_pcWheels->SetLinearVelocity(10,10);
+	
+	if (m_sStateData.ObjectCaged ){
+		m_pcLEDs->SetSingleColor(12, CColor::WHITE);
+		m_pcWheels->SetLinearVelocity(-10,-10);
+	}
 }
 /****************************************/
 /****************************************/
