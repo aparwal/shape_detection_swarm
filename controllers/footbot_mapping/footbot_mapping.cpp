@@ -436,7 +436,7 @@ void FootBotMapping::ApproachObject() {
 void FootBotMapping::CageObject() {
 
 	Real fNormDistExp = ::pow(m_sStateData.ReachDistance / m_sStateData.ObjVec.Length(), 2);
-   	CVector2 Object_Distance_Correction = CVector2(-5000 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
+   	CVector2 Object_Distance_Correction = CVector2(-1000 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
 
 
 	//  if(!m_sStateData.ObjectReached){
@@ -565,6 +565,11 @@ bool FootBotMapping::CheckForVertex() {
 
       /*Angle between the two closest neighbours*/
       Real diff_angle = (tPackets[first].HorizontalBearing-tPackets[second].HorizontalBearing).GetAbsoluteValue();
+
+      if ((tPackets[first].HorizontalBearing.GetValue() > 1.8) ||
+      	(tPackets[second].HorizontalBearing.GetValue() < -1.8))
+      	LOG << "Cave" << GetId()<<" "<< tPackets[first].HorizontalBearing.GetValue()
+      	<<tPackets[second].HorizontalBearing.GetValue() << std::endl;
       
       if (diff_angle < 2.7){
 
