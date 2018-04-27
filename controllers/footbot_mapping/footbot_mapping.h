@@ -120,6 +120,8 @@ public:
         CAGE_OBJECT,
         MAP_OBJECT,
         AT_VERTEX,
+        CONCAVE_VERTEX,
+        CONCAVE_REGION
       } State;
 
       /* True when the object is visible */
@@ -146,14 +148,34 @@ public:
       /*true when facing directly towards objeect while mapping*/  
       bool facing_object;
 
+      /*true when facing object and at the required distance from it*/
+      bool aligned_object;
+
       /*true when at vertex*/
       bool vertex_bot;
 
-      /*List of vertices*/
-      std::vector<int> vertex_list;
+      /*true when at concave vertex*/
+      bool concave_vertex;
 
-      /*Time counter*/
-      size_t time_in_state;
+      /*true when inside concave regions*/
+      bool concave_region;
+
+      /* NOTE: Should be implemented as two vectors in future, this is a quick and dirty workaround
+      One a list of current vertices, another a decay vounter*/
+      /*List of vertices*/
+      std::vector<int> vertex_list;//[50] = {0};
+      bool was_vertex;
+      // /*Decay of list of vertices over time*/
+      // int vertex_count[50];
+
+      /*Time counter before starting to broadcast*/
+      size_t time_in_map;
+
+      /*time counter before declaring concave*/
+      int time_in_concave,time_in_vertex;
+
+      /*Exponential moving average*/
+      Real avg_diff_angle, AvgAlpha;
 
       /* placeholder timestep variable*/
       // size_t MinimumMoveAroundTime;
@@ -214,8 +236,8 @@ private:
    /* Get vector pointing towards object, length roughly equal to distance*/
    CVector2 VectorToObject();
 
-   bool CheckForVertex();
-   void CheckNoDuplicateVertex();
+   void CheckForVertex();
+   bool CheckNoDuplicateVertex();
 
    /*State specific functions will go here*/
    void MapObject();

@@ -36,7 +36,8 @@
                        no_turn_angle_threshold="00"
                        max_speed="15" />
         <state reach_distance="30" 
-               min_time="100"/>
+               min_time="100"
+               average_alpha="0.005"/>
         <caging target_robot_distance="50"
                 target_object_distance="20"
                   robot_gain="1000"

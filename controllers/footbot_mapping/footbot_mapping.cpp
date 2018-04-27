@@ -60,12 +60,20 @@ void FootBotMapping::SStateData::Reset() {
    IncomingRobotSeen = false;
    facing_object = false;
    vertex_bot = false;
+   concave_vertex = false;
+   time_in_map = 0;
+   time_in_concave = 0;
+   concave_region = false;
+   aligned_object = false;
+   was_vertex = false;
+
 }
 
 void FootBotMapping::SStateData::Init(TConfigurationNode& t_node) {
    try {
       GetNodeAttribute(t_node, "reach_distance", ReachDistance);
       // GetNodeAttribute(t_node, "min_time", MinimumMoveAroundTime);
+      GetNodeAttribute(t_node, "average_alpha", AvgAlpha);
    }
    catch(CARGoSException& ex) {
       THROW_ARGOSEXCEPTION_NESTED("Error initializing controller state parameters.", ex);
@@ -249,6 +257,7 @@ CVector2 FootBotMapping::VectorToObject() {
     m_sStateData.ObjectCaged = false;
     m_sStateData.RobotAhead = false;
     m_sStateData.IncomingRobotSeen = false;
+    m_sStateData.concave_region = false;
     CRange<CRadians> FrontAngleRange(-1*CRadians::PI_OVER_FOUR,CRadians::PI_OVER_FOUR);
 
     CVector2 cAccum,current,nearest= CVector2(1000,0);
@@ -296,12 +305,16 @@ CVector2 FootBotMapping::VectorToObject() {
             	// 	LOG << sReadings.BlobList[i]->Angle <<" id:"<< GetId().c_str()<<std::endl;
 
             	if (FrontAngleRange.WithinMinBoundIncludedMaxBoundIncluded(sReadings.BlobList[i]->Angle))
-            		if (sReadings.BlobList[i]->Distance < m_sStateData.ReachDistance * 1.1f)
-
+            		if (sReadings.BlobList[i]->Distance < m_sStateData.ReachDistance * 1.2f)
             			m_sStateData.IncomingRobotSeen = true;
+            }
+            /*Look for Convcave vertex or other concave region bots*/
+            if (((sReadings.BlobList[i]->Color == CColor::MAGENTA)||(sReadings.BlobList[i]->Color == CColor::CYAN))&&
+            	(sReadings.BlobList[i]->Distance < 1.8f * m_sStateData.ReachDistance)) {
 
+            	// if(!m_sStateData.vertex_bot)
 
-
+            	    m_sStateData.concave_region = true;
             }
         }
     }
@@ -365,19 +378,35 @@ void FootBotMapping::ControlStep() {
             break;
         }
         case SStateData::MAP_OBJECT:{
-            m_pcLEDs->SetSingleColor(12, CColor::WHITE);
+            
             MapObject();
+            m_pcLEDs->SetSingleColor(12, CColor::WHITE);
             break;
         }
         case SStateData::AT_VERTEX:{
-            m_pcLEDs->SetSingleColor(12, CColor::YELLOW);
+            
             MapObject();
+            m_pcLEDs->SetSingleColor(12, CColor::YELLOW);
             break;
+        }
+        case SStateData::CONCAVE_VERTEX:{
+        		
+            MapObject();
+            m_pcLEDs->SetSingleColor(12, CColor::MAGENTA);
+            break;
+        }
+        case SStateData::CONCAVE_REGION :{
+        		
+        		MapObject();
+        		m_pcLEDs->SetSingleColor(12, CColor::CYAN);
+        		break;
         }
         default:
             LOGERR << "Unkown State: "<<m_sStateData.State <<" id:"<< GetId().c_str()<<std::endl;
     }
     UpdateState();
+    // if (std::stoi(GetId().c_str()) == 12 )
+    // 	LOG << m_sStateData.State << std :: endl;
 }
 
 
@@ -408,12 +437,42 @@ void FootBotMapping::UpdateState() {
         }
         case SStateData::MAP_OBJECT:{
 
+        		if (m_sStateData.concave_region)
+        			m_sStateData.State = SStateData::CONCAVE_REGION;
             if (m_sStateData.vertex_bot)
-              m_sStateData.State = SStateData::AT_VERTEX;
+              m_sStateData.State = SStateData::AT_VERTEX;            
+        		if (m_sStateData.concave_vertex)
+              m_sStateData.State = SStateData::CONCAVE_VERTEX;
+            
             break;
         }
         case SStateData::AT_VERTEX:{
+        		if (m_sStateData.concave_vertex)
+              m_sStateData.State = SStateData::CONCAVE_VERTEX;
+            if (!m_sStateData.vertex_bot)
+            	m_sStateData.State = SStateData::MAP_OBJECT;
             break;
+        }
+        case SStateData::CONCAVE_VERTEX:{
+        		if (!m_sStateData.concave_vertex)
+              m_sStateData.State = SStateData::AT_VERTEX;
+            if (!m_sStateData.vertex_bot && !m_sStateData.concave_vertex)
+            	if (!m_sStateData.concave_region)
+            		m_sStateData.State = SStateData::MAP_OBJECT;
+            	else
+            		m_sStateData.State = SStateData::CONCAVE_REGION;
+
+        	break;
+        }
+        case SStateData::CONCAVE_REGION:{
+        		// if (!m_sStateData.concave_region)
+          	// m_sStateData.State = SStateData::MAP_OBJECT;
+            if (m_sStateData.vertex_bot)
+            	m_sStateData.State = SStateData::AT_VERTEX;
+        		if (m_sStateData.concave_vertex)
+        			m_sStateData.State = SStateData::CONCAVE_VERTEX;
+
+        	break;
         }
 
         default:
@@ -426,11 +485,11 @@ void FootBotMapping::UpdateState() {
 /****************************************/
 void FootBotMapping::ApproachObject() {
 	m_pcLEDs->SetSingleColor(12, CColor::BLUE);
-	// if(m_sStateData.ObjectVisibility)
-	// 	SetWheelSpeedsFromVector(m_sStateData.ObjVec);
-	// else
+	
+	/*Move forward, towards the object*/
 	m_pcWheels->SetLinearVelocity(10,10);
 	
+	/*Non caging bot move away from the object*/
 	if (m_sStateData.ObjectCaged ){
 		m_pcLEDs->SetSingleColor(12, CColor::WHITE);
 		m_pcWheels->SetLinearVelocity(-10,-10);
@@ -441,15 +500,14 @@ void FootBotMapping::ApproachObject() {
 void FootBotMapping::CageObject() {
 
 	Real fNormDistExp = ::pow(m_sStateData.ReachDistance / m_sStateData.ObjVec.Length(), 2);
-   	CVector2 Object_Distance_Correction = CVector2(-1000 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
+  CVector2 Object_Distance_Correction = CVector2(-1000 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
 
 
 	//  if(!m_sStateData.ObjectReached){
 	//  	SetWheelSpeedsFromVector(10*Object_Distance_Correction.Normalize());
-	 	
 	// }
 	//  else
-		SetWheelSpeedsFromVector(10*m_sStateData.ObjVec.Normalize().Rotate(CRadians(-1*CRadians::PI_OVER_TWO))+ 5*Object_Distance_Correction.Normalize());
+	SetWheelSpeedsFromVector(10*m_sStateData.ObjVec.Normalize().Rotate(CRadians(-1*CRadians::PI_OVER_TWO))+ 5*Object_Distance_Correction.Normalize());
 }
 /****************************************/
 /****************************************/
@@ -458,27 +516,31 @@ void FootBotMapping::MapObject() {
 	// Real fNormDistExp = ::pow(m_sStateData.ReachDistance / m_sStateData.ObjVec.Length(), 2);
  //   	CVector2 Object_Distance_Correction = CVector2(-500 / m_sStateData.ObjVec.Length() * (fNormDistExp * fNormDistExp - fNormDistExp),m_sStateData.ObjVec.Angle());
     if ((m_sStateData.ObjVec.Angle().GetAbsoluteValue() > 0.1) && (!m_sStateData.facing_object)){
-        m_pcWheels->SetLinearVelocity(-2,2);
+        m_pcWheels->SetLinearVelocity(-3,3);
+
     }
     else{
         m_sStateData.facing_object = true;
 
-        if(m_sStateData.ObjVec.Length() > (m_sStateData.ReachDistance)+0.5){
+        if((m_sStateData.ObjVec.Length() > (m_sStateData.ReachDistance)+0.3) && (!m_sStateData.aligned_object)){
             m_pcWheels->SetLinearVelocity(2,2);
         }
-        else if(m_sStateData.ObjVec.Length() < (m_sStateData.ReachDistance)-0.5){
+        else if((m_sStateData.ObjVec.Length() < (m_sStateData.ReachDistance)-0.3) && (!m_sStateData.aligned_object)){
             m_pcWheels->SetLinearVelocity(-2,-2);
         }
         else{
-        	m_sStateData.vertex_bot = CheckForVertex();
-        	CheckNoDuplicateVertex();
+
+        	m_sStateData.aligned_object = true;
+        	CheckForVertex();
+        	// m_sStateData.vertex_bot = CheckNoDuplicateVertex();
         	m_pcWheels->SetLinearVelocity(0,0);
-        	m_sStateData.time_in_state++;
+        	m_sStateData.time_in_map++;
+
         }
     }
 
 		// CheckNoDuplicateVertex();
-		if (m_sStateData.time_in_state > 100)
+		if (m_sStateData.time_in_map > 1500)
     	BroadcastIDs();
 //m_pcWheels->SetLinearVelocity(0,0);
 }
@@ -519,33 +581,79 @@ void FootBotMapping::BroadcastIDs() {
 	}
 
 }
+// void FootBotMapping::BroadcastIDs() {
+// }
+// 	const CCI_RangeAndBearingSensor::TReadings& tPackets = m_pcRABS->GetReadings();
+// 	int number_of_vertices=0;
+	
+// 	for(size_t i = 1; i < tPackets.size(); ++i){
+// 		for (size_t j = 1; j < (sizeof(m_sStateData.vertex_count)/sizeof(*m_sStateData.vertex_count)); ++j){		
+			
+// 			if (tPackets[i].Data[j] == 1){
+// 				m_sStateData.vertex_list[tPackets[i].Data[j]] = 3;
+// 			}
+// 			else{
+// 				if (m_sStateData.vertex_count[tPackets[i].Data[j]]>0)
+// 					m_sStateData.vertex_list[tPackets[i].Data[j]]--;
+// 			}
+// 		}
+// 	}
+
+// 	if (m_sStateData.vertex_bot){
+// 		m_sStateData.vertex_list.[std::stoi(GetId().c_str())] = 3;
+// 	}
+
+// 	for (int i = 0; i < (sizeof(m_sStateData.vertex_count)/sizeof(*m_sStateData.vertex_count)); ++i)
+// 	{
+// 		if (m_sStateData.vertex_count[i] > 0){
+// 			number_of_vertices++;
+// 			m_pcRABA->SetData(i,1);
+// 		}
+// 	}
+
+// 	LOG << GetId() << ": " <<number_of_vertices << std::endl;
+	
+// 	m_pcRABA->SetData(0,m_sStateData.vertex_list.size());
+
+// 	for (int i = 1; i <= m_sStateData.vertex_list.size(); ++i)
+// 	{
+// 		m_pcRABA->SetData(i,m_sStateData.vertex_list[i-1]);
+// 	}
+// 		}
+
+// }
+
 /****************************************/
 /****************************************/
-void FootBotMapping::CheckNoDuplicateVertex(){
+bool FootBotMapping::CheckNoDuplicateVertex(){
 
 	const CCI_ColoredBlobOmnidirectionalCameraSensor::SReadings& blobReadings = m_pcCamera->GetReadings();
+
+	// if (!m_sStateData.vertex_bot)
+	// 	return false;
 
   if(! blobReadings.BlobList.empty()) {
 
     for(size_t i = 0; i < blobReadings.BlobList.size(); ++i) {
 
-      if ((blobReadings.BlobList[i]->Color == CColor::YELLOW)) {
+      if ((blobReadings.BlobList[i]->Color == CColor::YELLOW) || (blobReadings.BlobList[i]->Color == CColor::MAGENTA)) {
 
-        // LOG << blobReadings.BlobList[i]->Angle.GetValue() <<std::endl;
+        if ((blobReadings.BlobList[i]->Angle.GetValue() < 0.01) || (blobReadings.BlobList[i]->Angle.GetValue() > 3.00))  {
 
-        if (blobReadings.BlobList[i]->Angle.GetValue() > 0) {
-
-            m_pcLEDs->SetSingleColor(12, CColor::WHITE);
-            m_sStateData.vertex_bot = false;
+        		// LOG << GetId() << " " <<blobReadings.BlobList[i]->Angle.GetValue() <<std::endl;
+            // m_pcLEDs->SetSingleColor(12, CColor::WHITE);
+            // m_sStateData.vertex_bot = false;
+            return false;
         }
       }
     }
   }
+  return true;
 }
 
 /****************************************/
 /****************************************/
-bool FootBotMapping::CheckForVertex() {
+void FootBotMapping::CheckForVertex() {
 	const CCI_RangeAndBearingSensor::TReadings& tPackets = m_pcRABS->GetReadings();
     
     int first=0,second=1;
@@ -563,27 +671,66 @@ bool FootBotMapping::CheckForVertex() {
           second = first;
           first = i;
         }
-        // m_sStateData.b = tPackets[i].Range;
-        // if((tPackets[i].Data[0] != 0) & (tPackets[i].Range < m_sCagingParams.TargetRobotDistance * 1.30f))
-          // anglelist.push_back(tPackets[i].HorizontalBearing);
       }
+
+
 
       /*Angle between the two closest neighbours*/
       Real diff_angle = (tPackets[first].HorizontalBearing-tPackets[second].HorizontalBearing).GetAbsoluteValue();
 
-      if ((tPackets[first].HorizontalBearing.GetValue() > 1.8) ||
-      	(tPackets[second].HorizontalBearing.GetValue() < -1.8))
-      	LOG << "Cave" << GetId()<<" "<< tPackets[first].HorizontalBearing.GetValue()
-      	<<tPackets[second].HorizontalBearing.GetValue() << std::endl;
+      /*Add that to the eponential moving average*/
+      m_sStateData.avg_diff_angle = (1 -m_sStateData.AvgAlpha)*m_sStateData.avg_diff_angle + m_sStateData.AvgAlpha*diff_angle;
       
-      if (diff_angle < 2.7){
-
-      	// LOG << GetId() << std::endl;
-        return true;
-
+      /*Set vertex flag is the angle between closest neighbours on wither side is less than 2.7 rads(should be pi, if not for multiple bots at vertex)*/
+      // LOG << "vertex " << GetId()<<" "<< m_sStateData.avg_diff_angle <<std::endl;
+      if ((m_sStateData.avg_diff_angle < 2.5) &&
+      	// (tPackets[first].HorizontalBearing.GetValue()*tPackets[second].HorizontalBearing.GetValue() < 0) && 
+      	(CheckNoDuplicateVertex())){
+        
+        m_sStateData.vertex_bot = true;
     	}
+    	else{
+    		m_sStateData.vertex_bot = false;
+    	}
+
+    	/*Concave detection*/
+    	/*Increase time_in_concave if both bots are behind you 
+      or else decrease it*/
+      if ((tPackets[first].HorizontalBearing.GetAbsoluteValue() > 1.8) ||
+      	(tPackets[second].HorizontalBearing.GetAbsoluteValue() > 1.8)){
+
+      	m_sStateData.time_in_concave++;
+
+      }
+      else{
+      	m_sStateData.time_in_concave--;
+      }
+
+      /*If time in concave is above or below a certain limit, change flags*/
+      if (m_sStateData.time_in_concave > 100){
+
+      	m_sStateData.time_in_concave = 100;
+      	m_sStateData.concave_vertex = true;
+      	if (!CheckNoDuplicateVertex()){
+	      	m_sStateData.concave_vertex = false;
+	      	m_sStateData.time_in_concave = 0;
+	      }
+
+      	// if ((std::stoi(GetId().c_str()) == 13  ) ||(std::stoi(GetId().c_str()) == 12  )){
+      	// 	LOG << "Cave " << GetId()<<" "<< m_sStateData.time_in_concave << " " << m_sStateData.avg_diff_angle
+      	// 		<<  tPackets[first].HorizontalBearing.GetValue()<<tPackets[second].HorizontalBearing.GetValue() << std::endl;
+      	// }
+
+      }
+      else if (m_sStateData.time_in_concave < -100){
+      	m_sStateData.time_in_concave = -100;
+      	m_sStateData.concave_vertex = false;
+      	// m_sStateData.vertex_bot = false;
+      }
+
     }
-    return false;
+    // if (std::stoi(GetId().c_str()) == 13)
+    // 	LOG << m_sStateData.State << m_sStateData.concave_vertex << m_sStateData.concave_region << std::endl;
 }
 
 /*
