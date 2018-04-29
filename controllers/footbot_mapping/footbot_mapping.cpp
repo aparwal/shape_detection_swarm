@@ -414,6 +414,14 @@ void FootBotMapping::ControlStep() {
 /****************************************/
 
 void FootBotMapping::UpdateState() {
+	if(m_sStateData.time_in_stable == 300)
+	{
+		m_sStateData.end_time = m_sStateData.time_in_map;
+	}
+	if(m_sStateData.time_in_stable > 300)
+	{
+		LOG<<"DONE  "<<m_sStateData.end_time<<std::endl;
+	}
 	VectorToObject();
 	m_sStateData.step_counter++;
     switch(m_sStateData.State){
@@ -473,10 +481,9 @@ void FootBotMapping::UpdateState() {
         		// 	m_sStateData.State = SStateData::MAP_OBJECT;
         		// 	m_pcLEDs->SetSingleColor(12, CColor::WHITE);
         		// }
-        		if(m_sStateData.time_in_stable > 300){
 
+        		if(m_sStateData.time_in_stable > 300){
         			m_pcLEDs->SetSingleColor(12, CColor::CYAN);
-        			LOG<<"DONE  "<<m_sStateData.time_in_map<<std::endl;
         		}
 
         		// if (!m_sStateData.concave_region)
@@ -749,8 +756,8 @@ void FootBotMapping::CheckForVertex() {
       else{
       	m_sStateData.time_in_concave--;
       }
-      if (std::stoi(GetId().c_str()) == 14  )
-      	LOG<<" "<<m_sStateData.time_in_concave <<std::endl;
+      // if (std::stoi(GetId().c_str()) == 14  )
+      // 	LOG<<" "<<m_sStateData.time_in_concave <<std::endl;
 
       /*If time in concave is above or below a certain limit, change flags*/
       if (m_sStateData.time_in_concave > 100){

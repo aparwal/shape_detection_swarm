@@ -172,7 +172,7 @@ public:
       size_t time_in_map;
 
       /*time counter before declaring concave*/
-      int time_in_concave,time_in_concave_region,time_in_stable,old_number_of_vertex;
+      int time_in_concave,time_in_concave_region,time_in_stable,old_number_of_vertex,end_time=0;
 
       /*Exponential moving average*/
       Real avg_diff_angle, AvgAlpha,avg_left_angle,avg_right_angle;
