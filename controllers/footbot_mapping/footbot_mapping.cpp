@@ -63,10 +63,10 @@ void FootBotMapping::SStateData::Reset() {
    concave_vertex = false;
    time_in_map = 0;
    time_in_concave = 0;
+   time_in_concave_region = 0;
    concave_region = false;
    aligned_object = false;
-   was_vertex = false;
-
+   step_counter = 0;
 }
 
 void FootBotMapping::SStateData::Init(TConfigurationNode& t_node) {
@@ -396,9 +396,9 @@ void FootBotMapping::ControlStep() {
             break;
         }
         case SStateData::CONCAVE_REGION :{
-        		
-        		MapObject();
         		m_pcLEDs->SetSingleColor(12, CColor::CYAN);
+        		MapObject();
+        		
         		break;
         }
         default:
@@ -415,6 +415,7 @@ void FootBotMapping::ControlStep() {
 
 void FootBotMapping::UpdateState() {
 	VectorToObject();
+	m_sStateData.step_counter++;
     switch(m_sStateData.State){
     	case SStateData::APPROACH_OBJECT:{
             if (m_sStateData.ObjectReached)
@@ -465,6 +466,13 @@ void FootBotMapping::UpdateState() {
         	break;
         }
         case SStateData::CONCAVE_REGION:{
+        		m_sStateData.time_in_concave_region++;
+        		if(m_sStateData.time_in_concave_region > 100){
+        			if (m_sStateData.time_in_concave_region > 201)
+        				m_sStateData.time_in_concave_region = 0;
+        			m_sStateData.State = SStateData::MAP_OBJECT;
+        			m_pcLEDs->SetSingleColor(12, CColor::WHITE);
+        		}
         		// if (!m_sStateData.concave_region)
           	// m_sStateData.State = SStateData::MAP_OBJECT;
             if (m_sStateData.vertex_bot)
@@ -540,78 +548,38 @@ void FootBotMapping::MapObject() {
     }
 
 		// CheckNoDuplicateVertex();
-		if (m_sStateData.time_in_map > 1500)
+		if (m_sStateData.time_in_map > 0)
     	BroadcastIDs();
 //m_pcWheels->SetLinearVelocity(0,0);
 }
 
 /****************************************/
 /****************************************/
-void FootBotMapping::BroadcastIDs() {
-// TRANSMIT MESSAGE ---->
-
-	const CCI_RangeAndBearingSensor::TReadings& tPackets = m_pcRABS->GetReadings();
-	
-	for(size_t i = 1; i < tPackets.size(); ++i){
-		for (size_t j = 1; j <= tPackets[i].Data[0]; ++j){		
-			if(std::find(m_sStateData.vertex_list.begin(), m_sStateData.vertex_list.end(), tPackets[i].Data[j])!=m_sStateData.vertex_list.end()){
-			}
-			else{
-				m_sStateData.vertex_list.push_back( tPackets[i].Data[j] );
-			}
-		}
-	}
-	if (m_sStateData.vertex_bot){
-		if(std::find(m_sStateData.vertex_list.begin(), m_sStateData.vertex_list.end(), std::stoi(GetId().c_str()))!=m_sStateData.vertex_list.end()){
-		}
-		else{
-			m_sStateData.vertex_list.push_back(std::stoi(GetId().c_str()));
-		}
-	}
-
-	std::sort(m_sStateData.vertex_list.begin(), m_sStateData.vertex_list.end());
-
-	LOG << GetId() << ": " <<m_sStateData.vertex_list.size() << std::endl;
-	
-	m_pcRABA->SetData(0,m_sStateData.vertex_list.size());
-
-	for (int i = 1; i <= m_sStateData.vertex_list.size(); ++i)
-	{
-		m_pcRABA->SetData(i,m_sStateData.vertex_list[i-1]);
-	}
-
-}
 // void FootBotMapping::BroadcastIDs() {
-// }
+// // TRANSMIT MESSAGE ---->
+
 // 	const CCI_RangeAndBearingSensor::TReadings& tPackets = m_pcRABS->GetReadings();
-// 	int number_of_vertices=0;
 	
 // 	for(size_t i = 1; i < tPackets.size(); ++i){
-// 		for (size_t j = 1; j < (sizeof(m_sStateData.vertex_count)/sizeof(*m_sStateData.vertex_count)); ++j){		
-			
-// 			if (tPackets[i].Data[j] == 1){
-// 				m_sStateData.vertex_list[tPackets[i].Data[j]] = 3;
+// 		for (size_t j = 1; j <= tPackets[i].Data[0]; ++j){		
+// 			if(std::find(m_sStateData.vertex_list.begin(), m_sStateData.vertex_list.end(), tPackets[i].Data[j])!=m_sStateData.vertex_list.end()){
 // 			}
 // 			else{
-// 				if (m_sStateData.vertex_count[tPackets[i].Data[j]]>0)
-// 					m_sStateData.vertex_list[tPackets[i].Data[j]]--;
+// 				m_sStateData.vertex_list.push_back( tPackets[i].Data[j] );
 // 			}
 // 		}
 // 	}
-
 // 	if (m_sStateData.vertex_bot){
-// 		m_sStateData.vertex_list.[std::stoi(GetId().c_str())] = 3;
-// 	}
-
-// 	for (int i = 0; i < (sizeof(m_sStateData.vertex_count)/sizeof(*m_sStateData.vertex_count)); ++i)
-// 	{
-// 		if (m_sStateData.vertex_count[i] > 0){
-// 			number_of_vertices++;
-// 			m_pcRABA->SetData(i,1);
+// 		if(std::find(m_sStateData.vertex_list.begin(), m_sStateData.vertex_list.end(), std::stoi(GetId().c_str()))!=m_sStateData.vertex_list.end()){
+// 		}
+// 		else{
+// 			m_sStateData.vertex_list.push_back(std::stoi(GetId().c_str()));
 // 		}
 // 	}
 
-// 	LOG << GetId() << ": " <<number_of_vertices << std::endl;
+// 	std::sort(m_sStateData.vertex_list.begin(), m_sStateData.vertex_list.end());
+
+// 	LOG << GetId() << ": " <<m_sStateData.vertex_list.size() << std::endl;
 	
 // 	m_pcRABA->SetData(0,m_sStateData.vertex_list.size());
 
@@ -619,9 +587,51 @@ void FootBotMapping::BroadcastIDs() {
 // 	{
 // 		m_pcRABA->SetData(i,m_sStateData.vertex_list[i-1]);
 // 	}
-// 		}
 
 // }
+void FootBotMapping::BroadcastIDs() {
+
+	const CCI_RangeAndBearingSensor::TReadings& tPackets = m_pcRABS->GetReadings();
+	int number_of_vertices=0;
+	CByteArray data_stream;
+	
+	data_stream.Resize(0);
+	UInt16 temp;
+
+	
+	for(size_t i = 0; i < tPackets.size(); ++i){
+		CByteArray incoming_stream= CByteArray( tPackets[i].Data);
+		for (size_t j = 0; j < 40; ++j){		
+			// if ((std::stoi(GetId().c_str()) == 10) && (j<17))
+				// LOG<< GetId()<<": "<<i<<": "<<j<<": "<<tPackets[i].Data[j]<<std::endl;
+			
+			incoming_stream>>temp;
+			if (temp > m_sStateData.vertex_count[j]){
+				 m_sStateData.vertex_count[j] = temp;
+			}
+		}
+	}
+
+	if ((m_sStateData.vertex_bot)||(m_sStateData.concave_vertex)){
+		m_sStateData.vertex_count[std::stoi(GetId().c_str())] = m_sStateData.step_counter;
+	}
+
+	for (int i = 0; i < 40; ++i)
+	{
+		if (m_sStateData.vertex_count[i] > m_sStateData.step_counter - 30){
+			number_of_vertices++;
+		}
+		data_stream << m_sStateData.vertex_count[i];
+	}
+
+	data_stream.Resize(500);
+
+	// if ((std::stoi(GetId().c_str()) == 10))
+	// 	LOG<<data_stream<<std::endl;
+	m_pcRABA->SetData(data_stream);
+
+	LOG << GetId() << ": " <<number_of_vertices << std::endl;
+}
 
 /****************************************/
 /****************************************/

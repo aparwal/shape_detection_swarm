@@ -163,16 +163,16 @@ public:
       /* NOTE: Should be implemented as two vectors in future, this is a quick and dirty workaround
       One a list of current vertices, another a decay vounter*/
       /*List of vertices*/
-      std::vector<int> vertex_list;//[50] = {0};
-      bool was_vertex;
+      // std::vector<int> vertex_list;//[50] = {0};
+      UInt16 step_counter;
       // /*Decay of list of vertices over time*/
-      // int vertex_count[50];
+      UInt16 vertex_count[40] = {0};
 
       /*Time counter before starting to broadcast*/
       size_t time_in_map;
 
       /*time counter before declaring concave*/
-      int time_in_concave,time_in_vertex;
+      int time_in_concave,time_in_concave_region;
 
       /*Exponential moving average*/
       Real avg_diff_angle, AvgAlpha;
