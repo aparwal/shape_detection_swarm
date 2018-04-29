@@ -396,7 +396,7 @@ void FootBotMapping::ControlStep() {
             break;
         }
         case SStateData::CONCAVE_REGION :{
-        		m_pcLEDs->SetSingleColor(12, CColor::CYAN);
+        		m_pcLEDs->SetSingleColor(12, CColor::WHITE);
         		MapObject();
         		
         		break;
@@ -466,13 +466,18 @@ void FootBotMapping::UpdateState() {
         	break;
         }
         case SStateData::CONCAVE_REGION:{
-        		m_sStateData.time_in_concave_region++;
-        		if(m_sStateData.time_in_concave_region > 100){
-        			if (m_sStateData.time_in_concave_region > 201)
-        				m_sStateData.time_in_concave_region = 0;
-        			m_sStateData.State = SStateData::MAP_OBJECT;
-        			m_pcLEDs->SetSingleColor(12, CColor::WHITE);
+        		// m_sStateData.time_in_concave_region++;
+        		// if(m_sStateData.time_in_concave_region > 100){
+        		// 	if (m_sStateData.time_in_concave_region > 201)
+        		// 		m_sStateData.time_in_concave_region = 0;
+        		// 	m_sStateData.State = SStateData::MAP_OBJECT;
+        		// 	m_pcLEDs->SetSingleColor(12, CColor::WHITE);
+        		// }
+        		if(m_sStateData.time_in_stable > 300){
+        			m_pcLEDs->SetSingleColor(12, CColor::CYAN);
+        			// LOG<<GetId()<<std::endl;
         		}
+
         		// if (!m_sStateData.concave_region)
           	// m_sStateData.State = SStateData::MAP_OBJECT;
             if (m_sStateData.vertex_bot)
@@ -630,7 +635,14 @@ void FootBotMapping::BroadcastIDs() {
 	// 	LOG<<data_stream<<std::endl;
 	m_pcRABA->SetData(data_stream);
 
-	LOG << GetId() << ": " <<number_of_vertices << std::endl;
+	if(m_sStateData.old_number_of_vertex == number_of_vertices)
+		m_sStateData.time_in_stable++;
+	else
+		m_sStateData.time_in_stable = 0;
+
+	m_sStateData.old_number_of_vertex = number_of_vertices;
+
+	LOG << GetId() << ": " <<number_of_vertices<< << std::endl;
 }
 
 /****************************************/
@@ -666,7 +678,7 @@ bool FootBotMapping::CheckNoDuplicateVertex(){
 void FootBotMapping::CheckForVertex() {
 	const CCI_RangeAndBearingSensor::TReadings& tPackets = m_pcRABS->GetReadings();
     
-    int first=0,second=1;
+    int first=0,second=1,left=0,right=0;
     if (tPackets.size() >= 2)
     {
     	/*Fing the two closest neighbours*/
@@ -684,6 +696,22 @@ void FootBotMapping::CheckForVertex() {
       }
 
 
+    	/*Fing the  closest neighbours on both sides*/
+      for(size_t i = 1; i < tPackets.size(); ++i) 
+      {
+      	if (tPackets[i].HorizontalBearing.GetValue() < 0)
+	        if ( tPackets[i].Range < tPackets[left].Range )
+	        {
+	          left = i;
+	        }
+
+	      if (tPackets[i].HorizontalBearing.GetValue() > 0)
+	        if( tPackets[i].Range < tPackets[right].Range )
+	        {
+	          right = i;
+	        }
+      }
+
 
       /*Angle between the two closest neighbours*/
       Real diff_angle = (tPackets[first].HorizontalBearing-tPackets[second].HorizontalBearing).GetAbsoluteValue();
@@ -691,8 +719,14 @@ void FootBotMapping::CheckForVertex() {
       /*Add that to the eponential moving average*/
       m_sStateData.avg_diff_angle = (1 -m_sStateData.AvgAlpha)*m_sStateData.avg_diff_angle + m_sStateData.AvgAlpha*diff_angle;
       
+       /*Add that to the eponential moving average*/
+      m_sStateData.avg_left_angle = (1 -m_sStateData.AvgAlpha)*m_sStateData.avg_left_angle + m_sStateData.AvgAlpha*tPackets[left].HorizontalBearing.GetValue();
+      
+       /*Add that to the eponential moving average*/
+      m_sStateData.avg_right_angle = (1 -m_sStateData.AvgAlpha)*m_sStateData.avg_right_angle + m_sStateData.AvgAlpha*tPackets[right].HorizontalBearing.GetValue();
       /*Set vertex flag is the angle between closest neighbours on wither side is less than 2.7 rads(should be pi, if not for multiple bots at vertex)*/
-      // LOG << "vertex " << GetId()<<" "<< m_sStateData.avg_diff_angle <<std::endl;
+      if (std::stoi(GetId().c_str()) == 14  )
+      	LOG << "vertex " << GetId()<<" "<< tPackets[right].HorizontalBearing.GetValue()<< " " << tPackets[left].HorizontalBearing.GetValue() ;
       if ((m_sStateData.avg_diff_angle < 2.5) &&
       	// (tPackets[first].HorizontalBearing.GetValue()*tPackets[second].HorizontalBearing.GetValue() < 0) && 
       	(CheckNoDuplicateVertex())){
@@ -706,15 +740,16 @@ void FootBotMapping::CheckForVertex() {
     	/*Concave detection*/
     	/*Increase time_in_concave if both bots are behind you 
       or else decrease it*/
-      if ((tPackets[first].HorizontalBearing.GetAbsoluteValue() > 1.8) ||
-      	(tPackets[second].HorizontalBearing.GetAbsoluteValue() > 1.8)){
+      if ((tPackets[left].HorizontalBearing.GetAbsoluteValue() > 1.8) ||
+      	(tPackets[right].HorizontalBearing.GetAbsoluteValue() > 1.8)){
 
       	m_sStateData.time_in_concave++;
-
       }
       else{
       	m_sStateData.time_in_concave--;
       }
+      if (std::stoi(GetId().c_str()) == 14  )
+      	LOG<<" "<<m_sStateData.time_in_concave <<std::endl;
 
       /*If time in concave is above or below a certain limit, change flags*/
       if (m_sStateData.time_in_concave > 100){

@@ -26,7 +26,7 @@
       <sensors>
         <footbot_proximity implementation="default" show_rays="false" />
         <colored_blob_omnidirectional_camera implementation="rot_z_only" medium="leds" show_rays="false" />
-        <range_and_bearing implementation="medium" medium="rab" noise_std_dev="0.4" packet_drop_prob="0.2"/>
+        <range_and_bearing implementation="medium" medium="rab" noise_std_dev="0" packet_drop_prob="0"/>
       </sensors>
       <params >
         <diffusion go_straight_angle_range="-5:5"
@@ -37,7 +37,7 @@
                        max_speed="15" />
         <state reach_distance="30" 
                min_time="100"
-               average_alpha="0.005"/>
+               average_alpha="0.01"/>
         <caging target_robot_distance="50"
                 target_object_distance="20"
                   robot_gain="1000"
@@ -239,8 +239,7 @@
   <!-- ****************** -->
   <visualization>
     <qt-opengl>
-      <!-- <user_functions library="build/loop_functions/shape_loop_functions/libshape_loop_functions"
-                      label="shape_qtuser_functions" /> -->
+  
       <camera>
         <placement idx="5" position="-3.5,2,2" look_at="-5,-0,0" lens_focal_length="20" />
         <placement idx="4" position="-1.37702,-1.04453,0.308332" look_at="-1.1334,-1.85855,-0.21895" up="0.15118,-0.505144,0.849691" lens_focal_length="20" />
