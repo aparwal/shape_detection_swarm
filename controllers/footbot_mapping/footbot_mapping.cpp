@@ -642,7 +642,7 @@ void FootBotMapping::BroadcastIDs() {
 
 	m_sStateData.old_number_of_vertex = number_of_vertices;
 
-	LOG << GetId() << ": " <<number_of_vertices<< << std::endl;
+	LOG << GetId() << ": " <<number_of_vertices << std::endl;
 }
 
 /****************************************/
