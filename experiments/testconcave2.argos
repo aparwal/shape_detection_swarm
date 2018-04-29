@@ -26,7 +26,7 @@
       <sensors>
         <footbot_proximity implementation="default" show_rays="false" />
         <colored_blob_omnidirectional_camera implementation="rot_z_only" medium="leds" show_rays="false" />
-        <range_and_bearing implementation="medium" medium="rab" noise_std_dev="0.1" packet_drop_prob="0"/>
+        <range_and_bearing implementation="medium" medium="rab" noise_std_dev="0.4" packet_drop_prob="0.2"/>
       </sensors>
       <params >
         <diffusion go_straight_angle_range="-5:5"
