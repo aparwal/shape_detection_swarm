@@ -35,7 +35,7 @@
                        soft_turn_angle_threshold="70"
                        no_turn_angle_threshold="10"
                        max_speed="20" />
-        <state reach_distance="40" 
+        <state reach_distance="05" 
                min_time="35"/>
         <caging target_robot_distance="50"
                 target_object_distance="25"
