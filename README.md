@@ -16,7 +16,7 @@ make
 In the folder shape_detection_swarm, <br>
 For sqaure:
 ```
-argos3 -c experiments/footbot-testexperiment.argos 
+argos3 -c experiments/test.argos 
 ```
 
 ## Concept
